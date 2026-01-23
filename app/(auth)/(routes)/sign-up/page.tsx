@@ -11,7 +11,6 @@ import axios, { AxiosError } from "axios";
 import { Check, X, Eye, EyeOff, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import ReCAPTCHA from "react-google-recaptcha";
-import { RecaptchaGate } from "@/components/recaptcha-gate";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -99,7 +98,6 @@ export default function SignUpPage() {
   };
 
   return (
-    <RecaptchaGate>
       <div className="flex min-h-screen bg-background overflow-y-auto">
       <div className="absolute top-4 left-4 z-10">
         <Button variant="ghost" size="lg" asChild>
@@ -270,7 +268,7 @@ export default function SignUpPage() {
                 sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
                 onChange={(token) => setRecaptchaToken(token)}
                 onExpired={() => setRecaptchaToken(null)}
-                onError={() => {
+                onErrored={() => {
                   setRecaptchaToken(null);
                   toast.error("حدث خطأ في التحقق من reCaptcha");
                 }}
@@ -297,6 +295,5 @@ export default function SignUpPage() {
         </div>
       </div>
     </div>
-    </RecaptchaGate>
   );
 } 
