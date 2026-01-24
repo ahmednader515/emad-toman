@@ -241,11 +241,24 @@ export default function HomePage() {
             className="text-center mt-0 md:mt-0 order-2 md:order-1"
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
-                <span className="text-brand">د/عماد طمان</span>
+              <span className="text-brand">منصة د/عماد طمان</span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-              طريقك للنجاح و التفوق
-            </p>
+            <div className="flex flex-col items-center gap-4 mb-8">
+              <p className="text-xl md:text-2xl text-muted-foreground font-medium leading-relaxed">
+                شرح متميز للمرحلة الثانوية 
+                <span className="block text-lg md:text-xl mt-1">(الصف الأول - الثاني - الثالث)</span>
+              </p>
+              <div className="flex flex-wrap justify-center gap-3 mt-2">
+                <div className="flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-lg border border-border/50 shadow-sm">
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <span className="text-sm md:text-base font-medium">خبرة ٢٥ سنة</span>
+                </div>
+                <div className="flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-lg border border-border/50 shadow-sm">
+                  <Award className="w-4 h-4 text-brand" />
+                  <span className="text-sm md:text-base font-medium">مستشار بالمركز القومي للامتحانات</span>
+                </div>
+              </div>
+            </div>
             <Button size="lg" asChild className="bg-brand hover:bg-brand/90 text-white">
               <Link href="/sign-up">
                 ابدأ الآن <ArrowRight className="mr-2 h-4 w-4" />
