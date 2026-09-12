@@ -37,7 +37,8 @@ export async function GET(
                 hasVideoType: !!chapter.videoType,
                 hasYoutubeVideoId: !!chapter.youtubeVideoId,
                 isYouTube: chapter.videoType === "YOUTUBE",
-                isUpload: chapter.videoType === "UPLOAD"
+                isUpload: chapter.videoType === "UPLOAD",
+                isBunny: chapter.videoType === "BUNNY"
             }
         });
     } catch (error) {

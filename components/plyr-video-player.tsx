@@ -3,14 +3,57 @@
 import { useEffect, useRef } from "react";
 import "plyr/dist/plyr.css";
 
+export type ChapterVideoType = "UPLOAD" | "YOUTUBE" | "BUNNY";
+
 interface PlyrVideoPlayerProps {
   videoUrl?: string;
   youtubeVideoId?: string;
-  videoType?: "UPLOAD" | "YOUTUBE";
+  videoType?: ChapterVideoType;
   className?: string;
   onEnded?: () => void;
   onTimeUpdate?: (currentTime: number) => void;
 }
+
+export const getPlayerSource = (data: {
+  videoUrl: string | null;
+  videoType: string | null;
+  youtubeVideoId: string | null;
+}) => {
+  const videoType = (data.videoType as ChapterVideoType) || "UPLOAD";
+
+  return {
+    videoType,
+    videoUrl: videoType === "YOUTUBE" ? undefined : data.videoUrl || undefined,
+    youtubeVideoId: videoType === "YOUTUBE" ? data.youtubeVideoId || undefined : undefined,
+  };
+};
+
+const parsePlayerMessage = (data: unknown): { event?: string; seconds?: number } => {
+  const payload = typeof data === "string" ? (() => {
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
+  })() : data;
+
+  if (!payload || typeof payload !== "object") {
+    return {};
+  }
+
+  const message = payload as {
+    event?: string;
+    type?: string;
+    seconds?: number;
+    currentTime?: number;
+    value?: { seconds?: number };
+  };
+
+  return {
+    event: message.event || message.type,
+    seconds: message.seconds ?? message.currentTime ?? message.value?.seconds,
+  };
+};
 
 export const PlyrVideoPlayer = ({
   videoUrl,
@@ -34,8 +77,35 @@ export const PlyrVideoPlayer = ({
     }
   };
 
+  useEffect(() => {
+    if (videoType !== "BUNNY" || !videoUrl) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      const origin = String(event.origin || "");
+      if (
+        origin !== "https://iframe.mediadelivery.net" &&
+        origin !== "https://player.mediadelivery.net"
+      ) {
+        return;
+      }
+
+      const { event: eventName, seconds } = parsePlayerMessage(event.data);
+      if (eventName === "ended" || eventName === "complete") {
+        onEnded?.();
+      }
+      if (eventName === "timeupdate" && typeof seconds === "number") {
+        onTimeUpdate?.(seconds);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [videoType, videoUrl, onEnded, onTimeUpdate]);
+
   // Initialize Plyr on mount/update and destroy on unmount
   useEffect(() => {
+    if (videoType === "BUNNY") return;
+
     let isCancelled = false;
 
     async function setupPlayer() {
@@ -96,7 +166,9 @@ export const PlyrVideoPlayer = ({
     };
   }, [videoUrl, youtubeVideoId, videoType, onEnded, onTimeUpdate]);
 
-  const hasVideo = (videoType === "YOUTUBE" && !!youtubeVideoId) || !!videoUrl;
+  const hasVideo =
+    (videoType === "YOUTUBE" && !!youtubeVideoId) ||
+    ((videoType === "UPLOAD" || videoType === "BUNNY") && !!videoUrl);
 
   if (!hasVideo) {
     return (
@@ -114,6 +186,15 @@ export const PlyrVideoPlayer = ({
           data-plyr-provider="youtube"
           data-plyr-embed-id={youtubeVideoId}
           className="w-full h-full"
+        />
+      ) : videoType === "BUNNY" && videoUrl ? (
+        <iframe
+          src={videoUrl}
+          className="h-full w-full border-0"
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+          allowFullScreen
+          loading="lazy"
+          title="Bunny Stream video"
         />
       ) : (
         <video ref={html5VideoRef} className="w-full h-full" playsInline crossOrigin="anonymous">

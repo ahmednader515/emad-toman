@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import toast from "react-hot-toast";
-import { PlyrVideoPlayer } from "@/components/plyr-video-player";
+import { getPlayerSource, PlyrVideoPlayer } from "@/components/plyr-video-player";
 
 interface VideoFormProps {
     initialData: {
@@ -29,6 +29,7 @@ export const VideoForm = ({
     const [isEditing, setIsEditing] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [youtubeUrl, setYoutubeUrl] = useState("");
+    const [bunnyUrl, setBunnyUrl] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
 
@@ -95,6 +96,39 @@ export const VideoForm = ({
         }
     }
 
+    const onSubmitBunny = async () => {
+        if (!bunnyUrl.trim()) {
+            toast.error("يرجى إدخال رابط الفيديو");
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            const response = await fetch(`/api/courses/${courseId}/chapters/${chapterId}/bunny`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ bunnyUrl }),
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error || 'Failed to add Bunny video');
+            }
+
+            toast.success("تم إضافة فيديو Bunny بنجاح");
+            setIsEditing(false);
+            setBunnyUrl("");
+            router.refresh();
+        } catch (error) {
+            console.error("[CHAPTER_BUNNY]", error);
+            toast.error(error instanceof Error ? error.message : "حدث خطأ ما");
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
     if (!isMounted) {
         return null;
     }
@@ -119,18 +153,12 @@ export const VideoForm = ({
                 <div className="relative aspect-video mt-2">
                     {initialData.videoUrl ? (
                         (() => {
-                            console.log("🔍 VideoForm rendering PlyrVideoPlayer with:", {
-                                videoUrl: initialData.videoUrl,
-                                videoType: initialData.videoType,
-                                youtubeVideoId: initialData.youtubeVideoId,
-                                isUpload: initialData.videoType === "UPLOAD",
-                                isYouTube: initialData.videoType === "YOUTUBE"
-                            });
+                            const playerSource = getPlayerSource(initialData);
                             return (
                                 <PlyrVideoPlayer
-                                    videoUrl={initialData.videoType === "UPLOAD" ? initialData.videoUrl : undefined}
-                                    youtubeVideoId={initialData.videoType === "YOUTUBE" ? initialData.youtubeVideoId || undefined : undefined}
-                                    videoType={(initialData.videoType as "UPLOAD" | "YOUTUBE") || "UPLOAD"}
+                                    videoUrl={playerSource.videoUrl}
+                                    youtubeVideoId={playerSource.youtubeVideoId}
+                                    videoType={playerSource.videoType}
                                     className="w-full h-full"
                                 />
                             );
@@ -146,14 +174,18 @@ export const VideoForm = ({
             {isEditing && (
                 <div className="mt-4">
                     <Tabs defaultValue="upload" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="upload" className="flex items-center gap-2">
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="upload" className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm">
                                 <Upload className="h-4 w-4" />
                                 رفع فيديو
                             </TabsTrigger>
-                            <TabsTrigger value="youtube" className="flex items-center gap-2">
+                            <TabsTrigger value="youtube" className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm">
                                 <Youtube className="h-4 w-4" />
-                                رابط YouTube
+                                YouTube
+                            </TabsTrigger>
+                            <TabsTrigger value="bunny" className="flex items-center gap-1 text-xs sm:gap-2 sm:text-sm">
+                                <Link className="h-4 w-4" />
+                                Bunny
                             </TabsTrigger>
                         </TabsList>
                         
@@ -206,6 +238,37 @@ export const VideoForm = ({
                                     • https://youtu.be/VIDEO_ID
                                     <br />
                                     • https://www.youtube.com/embed/VIDEO_ID
+                                </div>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="bunny" className="mt-4">
+                            <div className="space-y-4">
+                                <div className="text-sm text-muted-foreground">
+                                    الصق رابط تضمين Bunny Stream
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="bunny-url">رابط Bunny</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="bunny-url"
+                                            placeholder="https://iframe.mediadelivery.net/embed/..."
+                                            value={bunnyUrl}
+                                            onChange={(e) => setBunnyUrl(e.target.value)}
+                                            className="flex-1"
+                                        />
+                                        <Button 
+                                            onClick={onSubmitBunny}
+                                            disabled={isSubmitting || !bunnyUrl.trim()}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <Link className="h-4 w-4" />
+                                            إضافة
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                    يدعم رابط التضمين أو كود iframe من Bunny Stream
                                 </div>
                             </div>
                         </TabsContent>

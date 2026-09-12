@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Lock, FileText, Download } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { PlyrVideoPlayer } from "@/components/plyr-video-player";
+import { getPlayerSource, PlyrVideoPlayer } from "@/components/plyr-video-player";
 
 interface Chapter {
   id: string;
@@ -15,7 +15,7 @@ interface Chapter {
   description: string | null;
   isFree: boolean;
   videoUrl: string | null;
-  videoType: "UPLOAD" | "YOUTUBE" | null;
+  videoType: "UPLOAD" | "YOUTUBE" | "BUNNY" | null;
   youtubeVideoId: string | null;
   documentUrl: string | null;
   documentName: string | null;
@@ -275,18 +275,13 @@ const ChapterPage = () => {
           <div className="aspect-video relative bg-black rounded-lg overflow-hidden">
             {chapter.videoUrl ? (
               (() => {
-                console.log("🔍 Rendering PlyrVideoPlayer with props:", {
-                  videoUrl: chapter.videoType === "UPLOAD" ? chapter.videoUrl : undefined,
-                  youtubeVideoId: chapter.videoType === "YOUTUBE" ? chapter.youtubeVideoId || undefined : undefined,
-                  videoType: (chapter.videoType as "UPLOAD" | "YOUTUBE") || "UPLOAD",
-                  key: `${chapter.id}-${chapter.videoUrl}-${chapter.videoType}`
-                });
+                const playerSource = getPlayerSource(chapter);
                 return (
                   <PlyrVideoPlayer
                     key={`${chapter.id}-${chapter.videoUrl}-${chapter.videoType}`}
-                    videoUrl={chapter.videoType === "UPLOAD" ? chapter.videoUrl : undefined}
-                    youtubeVideoId={chapter.videoType === "YOUTUBE" ? chapter.youtubeVideoId || undefined : undefined}
-                    videoType={(chapter.videoType as "UPLOAD" | "YOUTUBE") || "UPLOAD"}
+                    videoUrl={playerSource.videoUrl}
+                    youtubeVideoId={playerSource.youtubeVideoId}
+                    videoType={playerSource.videoType}
                     className="w-full h-full"
                     onEnded={onEnd}
                     onTimeUpdate={(currentTime) => {

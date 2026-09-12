@@ -68,7 +68,7 @@ model Chapter {
   title String @db.Text
   description String? @db.Text
   videoUrl String? @db.Text
-  videoType String? @default("UPLOAD") // "UPLOAD" or "YOUTUBE"
+  videoType String? @default("UPLOAD") // "UPLOAD", "YOUTUBE", or "BUNNY"
   youtubeVideoId String? // Store YouTube video ID
   documentUrl String? @db.Text // Store document URL (legacy - for backward compatibility)
   documentName String? // Store original document filename (legacy - for backward compatibility)

@@ -11,6 +11,7 @@
     "prisma:studio": "prisma studio --port 5556",
     "fix:quiz-options": "node scripts/fix-quiz-options.js",
     "test:quiz-options": "node scripts/test-quiz-options.js",
+    "download-uploadthing": "npx tsx ./scripts/download-uploadthing-files.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
