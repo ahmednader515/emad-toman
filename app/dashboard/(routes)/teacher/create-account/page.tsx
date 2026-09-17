@@ -10,6 +10,14 @@ import { toast } from "sonner";
 import { Eye, EyeOff, UserPlus, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import axios, { AxiosError } from "axios";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { GRADE_OPTIONS } from "@/lib/grades";
 
 interface CreatedUser {
   id: string;
@@ -30,6 +38,7 @@ export default function CreateAccountPage() {
     parentPhoneNumber: "",
     password: "",
     confirmPassword: "",
+    grade: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +68,12 @@ export default function CreateAccountPage() {
       return;
     }
 
+    if (!formData.grade) {
+      toast.error("يرجى اختيار الصف الدراسي");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await axios.post("/api/teacher/create-account", formData);
       
@@ -72,6 +87,7 @@ export default function CreateAccountPage() {
           parentPhoneNumber: "",
           password: "",
           confirmPassword: "",
+          grade: "",
         });
       }
     } catch (error) {
@@ -104,6 +120,7 @@ export default function CreateAccountPage() {
       parentPhoneNumber: "",
       password: "",
       confirmPassword: "",
+      grade: "",
     });
     setCreatedUser(null);
   };
@@ -207,6 +224,27 @@ export default function CreateAccountPage() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="grade">الصف الدراسي *</Label>
+                  <Select
+                    value={formData.grade}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, grade: value }))
+                    }
+                  >
+                    <SelectTrigger id="grade">
+                      <SelectValue placeholder="اختر الصف الدراسي" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GRADE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="password">كلمة المرور *</Label>
@@ -284,7 +322,7 @@ export default function CreateAccountPage() {
                 <div className="flex gap-4">
                   <Button
                     type="submit"
-                    disabled={isLoading || !passwordChecks.isValid}
+                    disabled={isLoading || !passwordChecks.isValid || !formData.grade}
                     className="flex-1 bg-brand hover:bg-brand/90 text-white"
                   >
                     {isLoading ? "جاري الإنشاء..." : "إنشاء الحساب"}

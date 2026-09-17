@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { isValidGrade } from "@/lib/grades";
 
 export async function POST(req: Request) {
   try {
@@ -17,10 +18,14 @@ export async function POST(req: Request) {
       return new NextResponse("Forbidden - Admin access required", { status: 403 });
     }
 
-    const { fullName, phoneNumber, parentPhoneNumber, password, confirmPassword } = await req.json();
+    const { fullName, phoneNumber, parentPhoneNumber, password, confirmPassword, grade } = await req.json();
 
-    if (!fullName || !phoneNumber || !parentPhoneNumber || !password || !confirmPassword) {
+    if (!fullName || !phoneNumber || !parentPhoneNumber || !password || !confirmPassword || !grade) {
       return new NextResponse("Missing required fields", { status: 400 });
+    }
+
+    if (!isValidGrade(grade)) {
+      return new NextResponse("Invalid grade", { status: 400 });
     }
 
     if (password !== confirmPassword) {
@@ -61,6 +66,7 @@ export async function POST(req: Request) {
         phoneNumber,
         parentPhoneNumber,
         hashedPassword,
+        grade,
         role: "USER", // Always create as student
       },
     });
@@ -78,4 +84,4 @@ export async function POST(req: Request) {
     console.error("[ADMIN_CREATE_ACCOUNT]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
-} 
+}

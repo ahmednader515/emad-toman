@@ -45,15 +45,19 @@ export default function HomePage() {
   const [courses, setCourses] = useState<CourseWithProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
+    if (status === "loading") return;
+
     const fetchCourses = async () => {
       try {
         setIsLoading(true);
-        // Fetch courses from public API endpoint
-        const response = await fetch("/api/courses/public");
+        // Fetch courses from authenticated API when logged in so students see their grade only
+        const response = await fetch(
+          session?.user ? "/api/courses" : "/api/courses/public"
+        );
         
         if (!response.ok) {
           console.error("Failed to fetch courses:", response.status, response.statusText);
@@ -72,7 +76,7 @@ export default function HomePage() {
     };
 
     fetchCourses();
-  }, []);
+  }, [session?.user, status]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

@@ -7,6 +7,7 @@ import { TitleForm } from "@/app/dashboard/(routes)/teacher/courses/[courseId]/_
 import { DescriptionForm } from "@/app/dashboard/(routes)/teacher/courses/[courseId]/_components/description-form";
 import { ImageForm } from "@/app/dashboard/(routes)/teacher/courses/[courseId]/_components/image-form";
 import { PriceForm } from "@/app/dashboard/(routes)/teacher/courses/[courseId]/_components/price-form";
+import { GradeForm } from "@/app/dashboard/(routes)/teacher/courses/[courseId]/_components/grade-form";
 import { CourseContentForm } from "@/app/dashboard/(routes)/teacher/courses/[courseId]/_components/course-content-form";
 import { Banner } from "@/components/banner";
 import { Actions } from "@/app/dashboard/(routes)/teacher/courses/[courseId]/_components/actions";
@@ -52,29 +53,20 @@ export default async function AdminCourseIdPage({
         return redirect("/dashboard/admin/courses");
     }
 
-    const requiredFields = [
-        course.title,
-        course.description,
-        course.imageUrl,
-        course.price,
-        course.chapters.some(chapter => chapter.isPublished)
-    ];
-
-    const totalFields = requiredFields.length;
-    const completedFields = requiredFields.filter(Boolean).length;
-
-    const completionText = `(${completedFields}/${totalFields})`;
-
-    const isComplete = requiredFields.every(Boolean);
-
-    // Create detailed completion status
     const completionStatus = {
         title: !!course.title,
         description: !!course.description,
         imageUrl: !!course.imageUrl,
         price: course.price !== null && course.price !== undefined,
+        grade: !!course.grade,
         publishedChapters: course.chapters.some(chapter => chapter.isPublished)
     };
+
+    const requiredFields = Object.values(completionStatus);
+    const totalFields = requiredFields.length;
+    const completedFields = requiredFields.filter(Boolean).length;
+    const completionText = `(${completedFields}/${totalFields})`;
+    const isComplete = requiredFields.every(Boolean);
 
     return (
         <>
@@ -112,6 +104,10 @@ export default async function AdminCourseIdPage({
                                         <span>{completionStatus.price ? '✓' : '✗'}</span>
                                         <span>السعر</span>
                                     </div>
+                                    <div className={`flex items-center gap-1 ${completionStatus.grade ? 'text-brand' : 'text-red-600'}`}>
+                                        <span>{completionStatus.grade ? '✓' : '✗'}</span>
+                                        <span>الصف</span>
+                                    </div>
                                     <div className={`flex items-center gap-1 ${completionStatus.publishedChapters ? 'text-brand' : 'text-red-600'}`}>
                                         <span>{completionStatus.publishedChapters ? '✓' : '✗'}</span>
                                         <span>فصل منشور</span>
@@ -143,6 +139,10 @@ export default async function AdminCourseIdPage({
                             courseId={course.id}
                         />
                         <PriceForm
+                            initialData={course}
+                            courseId={course.id}
+                        />
+                        <GradeForm
                             initialData={course}
                             courseId={course.id}
                         />

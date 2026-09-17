@@ -29,12 +29,20 @@ export default async function SearchPage({
     const resolvedParams = await searchParams;
     const title = typeof resolvedParams.title === 'string' ? resolvedParams.title : '';
 
+    const currentUser = await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { grade: true, role: true },
+    });
+
     const courses = await db.course.findMany({
         where: {
             isPublished: true,
             title: {
                 contains: title,
-            }
+            },
+            ...(currentUser?.role === "USER" && currentUser.grade
+                ? { grade: currentUser.grade }
+                : {}),
         },
         include: {
             chapters: {

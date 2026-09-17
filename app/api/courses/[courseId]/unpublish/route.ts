@@ -18,9 +18,6 @@ export async function PATCH(
             where: {
                 id: resolvedParams.courseId,
                 userId
-            },
-            include: {
-                chapters: true
             }
         });
 
@@ -28,25 +25,19 @@ export async function PATCH(
             return new NextResponse("Not found", { status: 404 });
         }
 
-        const hasPublishedChapters = course.chapters.some((chapter) => chapter.isPublished);
-
-        if (!course.title || !course.description || !course.imageUrl || !course.grade || !hasPublishedChapters) {
-            return new NextResponse("Missing required fields", { status: 401 });
-        }
-
-        const publishedCourse = await db.course.update({
+        const unpublishedCourse = await db.course.update({
             where: {
                 id: resolvedParams.courseId,
                 userId
             },
             data: {
-                isPublished: true
+                isPublished: false
             }
         });
 
-        return NextResponse.json(publishedCourse);
+        return NextResponse.json(unpublishedCourse);
     } catch (error) {
-        console.log("[COURSE_PUBLISH]", error);
+        console.log("[COURSE_UNPUBLISH]", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
-} 
+}

@@ -32,10 +32,21 @@ export async function GET(req: Request) {
     const includeProgress = searchParams.get('includeProgress') === 'true';
     
     // Try to get user, but don't fail if not authenticated
-    let userId = null;
+    let userId: string | null = null;
+    let userRole: string | null = null;
+    let userGrade: string | null = null;
     try {
       const authResult = await auth();
       userId = authResult.userId;
+      userRole = authResult.user?.role || null;
+
+      if (userId && userRole === "USER") {
+        const student = await db.user.findUnique({
+          where: { id: userId },
+          select: { grade: true },
+        });
+        userGrade = student?.grade || null;
+      }
     } catch (error) {
       // User is not authenticated, which is fine for the home page
       console.log("User not authenticated, showing courses without progress");
@@ -44,6 +55,9 @@ export async function GET(req: Request) {
     const courses = await db.course.findMany({
       where: {
         isPublished: true,
+        ...(userRole === "USER" && userGrade
+          ? { grade: userGrade }
+          : {}),
       },
       include: {
         user: true,
