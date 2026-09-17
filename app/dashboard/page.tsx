@@ -9,6 +9,7 @@ import { BookOpen, Play, Clock, Trophy, Wallet, TrendingUp, BookOpen as BookOpen
 import Link from "next/link";
 import Image from "next/image";
 import { Course, Purchase, Chapter } from "@prisma/client";
+import { RedeemCodeForm } from "./_components/redeem-code-form";
 
 type CourseWithProgress = Course & {
   chapters: { id: string }[];
@@ -299,6 +300,8 @@ const CoursesPage = async () => {
           </div>
         </div>
       </div>
+
+      <RedeemCodeForm />
 
       {/* Last Watched Chapter - Big Square */}
       {lastWatchedChapter && (
