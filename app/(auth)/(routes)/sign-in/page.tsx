@@ -17,6 +17,7 @@ export default function SignInPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     phoneNumber: "",
     password: "",
@@ -24,29 +25,67 @@ export default function SignInPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (errorMessage) {
+      setErrorMessage(null);
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
+  const getSignInErrorMessage = (error: string) => {
+    const normalized = error.toLowerCase();
+
+    if (
+      normalized === "credentialssignin" ||
+      normalized.includes("invalid credentials")
+    ) {
+      return "رقم الهاتف أو كلمة المرور غير صحيحة";
+    }
+
+    if (
+      normalized.includes("missing credentials") ||
+      normalized.includes("missing")
+    ) {
+      return "يرجى إدخال رقم الهاتف وكلمة المرور";
+    }
+
+    if (normalized.includes("configuration")) {
+      return "حدث خطأ في إعدادات تسجيل الدخول. يرجى المحاولة لاحقاً";
+    }
+
+    if (normalized.includes("accessdenied") || normalized.includes("access denied")) {
+      return "ليس لديك صلاحية لتسجيل الدخول";
+    }
+
+    return "حدث خطأ أثناء تسجيل الدخول";
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(null);
+
+    if (!formData.phoneNumber.trim() || !formData.password) {
+      const message = "يرجى إدخال رقم الهاتف وكلمة المرور";
+      setErrorMessage(message);
+      toast.error(message);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const result = await signIn("credentials", {
-        phoneNumber: formData.phoneNumber,
+        phoneNumber: formData.phoneNumber.trim(),
         password: formData.password,
         redirect: false,
       });
 
       if (result?.error) {
-        if (result.error === "CredentialsSignin") {
-          toast.error("رقم الهاتف أو كلمة المرور غير صحيحة");
-        } else {
-          toast.error("حدث خطأ أثناء تسجيل الدخول");
-        }
+        const message = getSignInErrorMessage(result.error);
+        setErrorMessage(message);
+        toast.error(message);
         return;
       }
 
@@ -66,7 +105,9 @@ export default function SignInPage() {
         router.replace(target);
       }
     } catch {
-      toast.error("حدث خطأ أثناء تسجيل الدخول");
+      const message = "حدث خطأ أثناء تسجيل الدخول";
+      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -166,6 +207,15 @@ export default function SignInPage() {
                 </Button>
               </div>
             </div>
+
+            {errorMessage && (
+              <div
+                role="alert"
+                className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              >
+                {errorMessage}
+              </div>
+            )}
 
             <LoadingButton
               type="submit"
